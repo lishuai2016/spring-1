@@ -29,7 +29,7 @@ import org.apache.ibatis.transaction.TransactionFactory;
  *
  * @author Hunter Presnall
  */
-public class SpringManagedTransactionFactory implements TransactionFactory {
+public class SpringManagedTransactionFactory implements TransactionFactory {//spring自己的Transaction工厂实现
 
   /**
    * {@inheritDoc}

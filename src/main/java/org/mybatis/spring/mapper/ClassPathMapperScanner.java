@@ -45,11 +45,11 @@ import java.util.Set;
  *
  * @author Hunter Presnall
  * @author Eduardo Macarron
- * 
+ *
  * @see MapperFactoryBean
  * @since 1.2.0
  */
-public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
+public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {//
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ClassPathMapperScanner.class);
 
@@ -177,19 +177,19 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
    * processed to set them as MapperFactoryBeans
    */
   @Override
-  public Set<BeanDefinitionHolder> doScan(String... basePackages) {
-    Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
+  public Set<BeanDefinitionHolder> doScan(String... basePackages) {//父类留下的模板方法，具体的bean注册逻辑
+    Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);//解析到一组mapper接口类。如果指定的包范围过大，会不会把不是mapper接口的类也处理了？
 
     if (beanDefinitions.isEmpty()) {
       LOGGER.warn(() -> "No MyBatis mapper was found in '" + Arrays.toString(basePackages)
           + "' package. Please check your configuration.");
     } else {
-      processBeanDefinitions(beanDefinitions);
+      processBeanDefinitions(beanDefinitions);//完成mapper接口到MapperFactoryBean之间的转化
     }
 
     return beanDefinitions;
   }
-
+  //这里应该是把一个bean转化为MapperFactoryBean，并添加各个属性字段的值
   private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
     GenericBeanDefinition definition;
     for (BeanDefinitionHolder holder : beanDefinitions) {
@@ -201,9 +201,9 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
       // the mapper interface is the original class of the bean
       // but, the actual class of the bean is MapperFactoryBean
       definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName); // issue #59
-      definition.setBeanClass(this.mapperFactoryBeanClass);
+      definition.setBeanClass(this.mapperFactoryBeanClass);//应该是这里把接口转化为MapperFactoryBean类型的
 
-      definition.getPropertyValues().add("addToConfig", this.addToConfig);
+      definition.getPropertyValues().add("addToConfig", this.addToConfig);//添加addToConfig属性字段的值
 
       boolean explicitFactoryUsed = false;
       if (StringUtils.hasText(this.sqlSessionFactoryBeanName)) {

@@ -35,7 +35,7 @@ import com.mockrunner.mock.jdbc.MockResultSet;
 
 public abstract class AbstractMyBatisSpringTest {
 
-  protected static PooledMockDataSource dataSource = new PooledMockDataSource();
+  protected static PooledMockDataSource dataSource = new PooledMockDataSource();//mock的数据源
 
   protected static SqlSessionFactory sqlSessionFactory;
 

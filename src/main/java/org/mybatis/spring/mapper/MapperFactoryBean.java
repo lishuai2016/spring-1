@@ -53,7 +53,7 @@ import org.springframework.beans.factory.FactoryBean;
  */
 public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements FactoryBean<T> {
 
-  private Class<T> mapperInterface;
+  private Class<T> mapperInterface;//mapper接口的类型
 
   private boolean addToConfig = true;
 
@@ -75,9 +75,9 @@ public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements Factor
     notNull(this.mapperInterface, "Property 'mapperInterface' is required");
 
     Configuration configuration = getSqlSession().getConfiguration();
-    if (this.addToConfig && !configuration.hasMapper(this.mapperInterface)) {
+    if (this.addToConfig && !configuration.hasMapper(this.mapperInterface)) {//判断在configuration是否已经注册过，没有的话进行注册
       try {
-        configuration.addMapper(this.mapperInterface);
+        configuration.addMapper(this.mapperInterface);//注册接口
       } catch (Exception e) {
         logger.error("Error while adding the mapper '" + this.mapperInterface + "' to configuration.", e);
         throw new IllegalArgumentException(e);
@@ -91,7 +91,7 @@ public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements Factor
    * {@inheritDoc}
    */
   @Override
-  public T getObject() throws Exception {
+  public T getObject() throws Exception {//重点，这里生成动态代理对象
     return getSqlSession().getMapper(this.mapperInterface);
   }
 
@@ -119,7 +119,7 @@ public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements Factor
    * @param mapperInterface
    *          class of the interface
    */
-  public void setMapperInterface(Class<T> mapperInterface) {
+  public void setMapperInterface(Class<T> mapperInterface) {//设置一个mapper接口的全路径，比如：org.mybatis.spring.sample.mapper.UserMapper
     this.mapperInterface = mapperInterface;
   }
 

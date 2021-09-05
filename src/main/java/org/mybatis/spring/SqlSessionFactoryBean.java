@@ -86,28 +86,28 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
  * @see #setDataSource
  */
 public class SqlSessionFactoryBean
-    implements FactoryBean<SqlSessionFactory>, InitializingBean, ApplicationListener<ApplicationEvent> {
+    implements FactoryBean<SqlSessionFactory>, InitializingBean, ApplicationListener<ApplicationEvent> {//单例工厂bean对象
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SqlSessionFactoryBean.class);
 
   private static final ResourcePatternResolver RESOURCE_PATTERN_RESOLVER = new PathMatchingResourcePatternResolver();
   private static final MetadataReaderFactory METADATA_READER_FACTORY = new CachingMetadataReaderFactory();
 
-  private Resource configLocation;
+  private Resource configLocation;//mybatis的配置文件路径，可包含mapper.xml路径
 
   private Configuration configuration;
 
-  private Resource[] mapperLocations;
+  private Resource[] mapperLocations;//指定了mapper.xml所在的路径
 
-  private DataSource dataSource;
+  private DataSource dataSource;//数据库连接池
 
-  private TransactionFactory transactionFactory;
+  private TransactionFactory transactionFactory;//mybatis的TransactionFactory
 
-  private Properties configurationProperties;
+  private Properties configurationProperties;//mybatis一些属性配置
 
-  private SqlSessionFactoryBuilder sqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
+  private SqlSessionFactoryBuilder sqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();//SqlSessionFactory工厂对象的构建者，DefaultSqlSessionFactory
 
-  private SqlSessionFactory sqlSessionFactory;
+  private SqlSessionFactory sqlSessionFactory;//在afterPropertiesSet()中进行初始化
 
   // EnvironmentAware requires spring 3.1
   private String environment = SqlSessionFactoryBean.class.getSimpleName();
@@ -627,7 +627,7 @@ public class SqlSessionFactoryBean
    * {@inheritDoc}
    */
   @Override
-  public SqlSessionFactory getObject() throws Exception {
+  public SqlSessionFactory getObject() throws Exception {//获取SqlSessionFactory实例对象
     if (this.sqlSessionFactory == null) {
       afterPropertiesSet();
     }

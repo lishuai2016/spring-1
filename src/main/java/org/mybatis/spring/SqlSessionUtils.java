@@ -70,7 +70,7 @@ public final class SqlSessionUtils {
     return getSqlSession(sessionFactory, executorType, null);
   }
 
-  /**
+  /** 从事务管理器中获取一个SqlSession（从当前事务中获取一个，没有的话新建一个）
    * Gets an SqlSession from Spring Transaction Manager or creates a new one if needed. Tries to get a SqlSession out of
    * current transaction. If there is not any, it creates a new one. Then, it synchronizes the SqlSession with the
    * transaction if Spring TX is active and <code>SpringManagedTransactionFactory</code> is configured as a transaction
@@ -93,7 +93,7 @@ public final class SqlSessionUtils {
 
     notNull(sessionFactory, NO_SQL_SESSION_FACTORY_SPECIFIED);
     notNull(executorType, NO_EXECUTOR_TYPE_SPECIFIED);
-
+    //
     SqlSessionHolder holder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
 
     SqlSession session = sessionHolder(executorType, holder);
@@ -102,7 +102,7 @@ public final class SqlSessionUtils {
     }
 
     LOGGER.debug(() -> "Creating a new SqlSession");
-    session = sessionFactory.openSession(executorType);
+    session = sessionFactory.openSession(executorType);//创建一个sqlsession
 
     registerSessionHolder(sessionFactory, executorType, exceptionTranslator, session);
 
@@ -115,7 +115,7 @@ public final class SqlSessionUtils {
    * Note: The DataSource used by the Environment should be synchronized with the transaction either through
    * DataSourceTxMgr or another tx synchronization. Further assume that if an exception is thrown, whatever started the
    * transaction will handle closing / rolling back the Connection associated with the SqlSession.
-   * 
+   *
    * @param sessionFactory
    *          sqlSessionFactory used for registration.
    * @param executorType
@@ -133,11 +133,11 @@ public final class SqlSessionUtils {
 
       if (environment.getTransactionFactory() instanceof SpringManagedTransactionFactory) {
         LOGGER.debug(() -> "Registering transaction synchronization for SqlSession [" + session + "]");
-
+        //创建holder
         holder = new SqlSessionHolder(session, executorType, exceptionTranslator);
-        TransactionSynchronizationManager.bindResource(sessionFactory, holder);
+        TransactionSynchronizationManager.bindResource(sessionFactory, holder);//存到ThreadLocal<Map<Object, Object>>
         TransactionSynchronizationManager
-            .registerSynchronization(new SqlSessionSynchronization(holder, sessionFactory));
+            .registerSynchronization(new SqlSessionSynchronization(holder, sessionFactory));//存到ThreadLocal<Set<TransactionSynchronization>>
         holder.setSynchronizedWithTransaction(true);
         holder.requested();
       } else {

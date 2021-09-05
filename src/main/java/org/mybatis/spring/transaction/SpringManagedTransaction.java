@@ -41,17 +41,17 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * @author Hunter Presnall
  * @author Eduardo Macarron
  */
-public class SpringManagedTransaction implements Transaction {
+public class SpringManagedTransaction implements Transaction {//spring自己的Transaction接口实现
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SpringManagedTransaction.class);
 
-  private final DataSource dataSource;
+  private final DataSource dataSource;//数据库连接池
 
-  private Connection connection;
+  private Connection connection;//绑定的数据库链接
 
-  private boolean isConnectionTransactional;
+  private boolean isConnectionTransactional;//事务隔离级别
 
-  private boolean autoCommit;
+  private boolean autoCommit;//事务的提交模式
 
   public SpringManagedTransaction(DataSource dataSource) {
     notNull(dataSource, "No DataSource specified");
@@ -76,7 +76,7 @@ public class SpringManagedTransaction implements Transaction {
    * It also reads autocommit setting because when using Spring Transaction MyBatis thinks that autocommit is always
    * false and will always call commit/rollback so we need to no-op that calls.
    */
-  private void openConnection() throws SQLException {
+  private void openConnection() throws SQLException {//这里获取的链接和spring事务管理器相关了
     this.connection = DataSourceUtils.getConnection(this.dataSource);
     this.autoCommit = this.connection.getAutoCommit();
     this.isConnectionTransactional = DataSourceUtils.isConnectionTransactional(this.connection, this.dataSource);

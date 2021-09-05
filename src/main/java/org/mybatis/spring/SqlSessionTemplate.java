@@ -40,7 +40,9 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 
-/**
+/**  SqlSessionTemplate被spring的事务管理器管理，并且和一个spring的当前事务关联在一起。并且管理session的声明周期，包括：closing, committing or rolling back
+ *  SqlSessionTemplate线程安全，单例可以被全部的dao使用。
+ *
  * Thread safe, Spring managed, {@code SqlSession} that works with Spring transaction management to ensure that that the
  * actual SqlSession used is the one associated with the current Spring transaction. In addition, it manages the session
  * life-cycle, including closing, committing or rolling back the session as necessary based on the Spring transaction
@@ -71,15 +73,15 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
  * @see SqlSessionFactory
  * @see MyBatisExceptionTranslator
  */
-public class SqlSessionTemplate implements SqlSession, DisposableBean {
+public class SqlSessionTemplate implements SqlSession, DisposableBean {//实现了mybatis的SqlSession接口，代理模式
 
-  private final SqlSessionFactory sqlSessionFactory;
+  private final SqlSessionFactory sqlSessionFactory;//session工厂,用来创建真正执行SQL的sqlsession对象
 
-  private final ExecutorType executorType;
+  private final ExecutorType executorType;//执行类型：SIMPLE/REUSE/BATCH，默认是SIMPLE
 
-  private final SqlSession sqlSessionProxy;
+  private final SqlSession sqlSessionProxy;//被代理的sqlsession
 
-  private final PersistenceExceptionTranslator exceptionTranslator;
+  private final PersistenceExceptionTranslator exceptionTranslator;//把mybatis的异常转化为spring的异常
 
   /**
    * Constructs a Spring managed SqlSession with the {@code SqlSessionFactory} provided as an argument.
@@ -128,7 +130,7 @@ public class SqlSessionTemplate implements SqlSession, DisposableBean {
     this.executorType = executorType;
     this.exceptionTranslator = exceptionTranslator;
     this.sqlSessionProxy = (SqlSession) newProxyInstance(SqlSessionFactory.class.getClassLoader(),
-        new Class[] { SqlSession.class }, new SqlSessionInterceptor());
+        new Class[] { SqlSession.class }, new SqlSessionInterceptor());//创建jdk的动态代理
   }
 
   public SqlSessionFactory getSqlSessionFactory() {
@@ -307,7 +309,7 @@ public class SqlSessionTemplate implements SqlSession, DisposableBean {
    * {@inheritDoc}
    */
   @Override
-  public <T> T getMapper(Class<T> type) {
+  public <T> T getMapper(Class<T> type) {//这里从Configuration配置类中获取Mapper接口实例，获取的是MapperProxy代理的sqlsession对象
     return getConfiguration().getMapper(type, this);
   }
 
@@ -412,7 +414,7 @@ public class SqlSessionTemplate implements SqlSession, DisposableBean {
     // UnsupportedOperationException
   }
 
-  /**
+  /** 把对mybatis调用的方法路由到由spring事务管理器中创建的真正SqlSession去。
    * Proxy needed to route MyBatis method calls to the proper SqlSession got from Spring's Transaction Manager It also
    * unwraps exceptions thrown by {@code Method#invoke(Object, Object...)} to pass a {@code PersistenceException} to the
    * {@code PersistenceExceptionTranslator}.
@@ -420,10 +422,10 @@ public class SqlSessionTemplate implements SqlSession, DisposableBean {
   private class SqlSessionInterceptor implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      SqlSession sqlSession = getSqlSession(SqlSessionTemplate.this.sqlSessionFactory,
+      SqlSession sqlSession = getSqlSession(SqlSessionTemplate.this.sqlSessionFactory,//1、获取真正执行SQL的sqlsession对象
           SqlSessionTemplate.this.executorType, SqlSessionTemplate.this.exceptionTranslator);
       try {
-        Object result = method.invoke(sqlSession, args);
+        Object result = method.invoke(sqlSession, args);//2、执行SQL
         if (!isSqlSessionTransactional(sqlSession, SqlSessionTemplate.this.sqlSessionFactory)) {
           // force commit even on non-dirty sessions because some databases require
           // a commit/rollback before calling close()
